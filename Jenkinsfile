@@ -3,7 +3,6 @@ pipeline {
 
 
     options {
-        // Mantén solo los últimos 5 builds y muestra timestamps
         buildDiscarder(logRotator(numToKeepStr: '5'))
         timestamps()
     }
@@ -12,6 +11,18 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
+            }
+        }
+        stage('Verifica Gradle Cache') {
+            steps {
+                script {
+                    def gradleZip = 'C:/\.gradle/wrapper/dists/gradle-8.14.2-bin/manual/gradle-8.14.2-bin.zip'
+                    if (fileExists(gradleZip)) {
+                        echo "[INFO] Gradle ZIP encontrado en cache local: ${gradleZip}"
+                    } else {
+                        echo "[ADVERTENCIA] Gradle ZIP NO encontrado en cache local: ${gradleZip}. Se intentará descargar desde internet."
+                    }
+                }
             }
         }
         stage('Test') {
@@ -32,11 +43,9 @@ pipeline {
     }
     post {
         always {
-            // Mostrar estado de los contenedores
             bat 'docker compose ps'
         }
         failure {
-            // Puedes agregar notificaciones aquí (ej: email, Slack)
             echo 'El pipeline falló. Revisa los logs.'
         }
     }

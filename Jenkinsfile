@@ -1,9 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        // Puedes agregar variables de entorno aquí si es necesario
-    }
 
     options {
         // Mantén solo los últimos 5 builds y muestra timestamps

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/header :: head(${reader.id} ? 'Editar Lector' : 'Nuevo Lector')">
+</head>
+<body>
+    <header th:replace="fragments/header :: navbar"></header>
+    
+    <main class="container protected-page">
+        <h1 class="mt-4 mb-4" th:text="${reader.id} ? 'Editar Lector' : 'Nuevo Lector'">Nuevo Lector</h1>
+        
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{${reader.id} ? '/readers/' + ${reader.id} : '/readers'}" th:object="${reader}" method="post">
+                    <input type="hidden" th:field="*{id}" />
+                    
+                    <div class="form-group">
+                        <label for="name" class="form-label">Nombre</label>
+                        <input type="text" id="name" th:field="*{name}" class="form-control" required>
+                        <div class="text-danger" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="surname" class="form-label">Apellido</label>
+                        <input type="text" id="surname" th:field="*{surname}" class="form-control">
+                        <div class="text-danger" th:if="${#fields.hasErrors('surname')}" th:errors="*{surname}"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" id="email" th:field="*{email}" class="form-control" required>
+                        <div class="text-danger" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                    </div>
+                    
+                    <div class="form-group" th:if="${reader.id == null}">
+                        <label for="password" class="form-label">Contraseña</label>
+                        <input type="password" id="password" th:field="*{password}" class="form-control" th:required="${reader.id == null}">
+                        <div class="text-danger" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+                    </div>
+                    
+                    <div class="form-group" th:if="${reader.id != null}">
+                        <label for="newPassword" class="form-label">Nueva Contraseña (dejar en blanco para mantener la actual)</label>
+                        <input type="password" id="newPassword" name="newPassword" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone" class="form-label">Teléfono</label>
+                        <input type="text" id="phone" th:field="*{phone}" class="form-control">
+                        <div class="text-danger" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="address" class="form-label">Dirección</label>
+                        <input type="text" id="address" th:field="*{address}" class="form-control">
+                        <div class="text-danger" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="city" class="form-label">Ciudad</label>
+                        <input type="text" id="city" th:field="*{city}" class="form-control">
+                        <div class="text-danger" th:if="${#fields.hasErrors('city')}" th:errors="*{city}"></div>
+                    </div>
+                    
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <a th:href="@{/readers}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    
+    <footer th:replace="fragments/footer :: footer"></footer>
+</body>
+</html>

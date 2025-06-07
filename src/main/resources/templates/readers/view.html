@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="fragments/header :: head('Detalles del Lector')">
+</head>
+<body>
+    <header th:replace="fragments/header :: navbar"></header>
+    
+    <main class="container protected-page">
+        <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
+            <h1>Detalles del Lector</h1>
+            <div>
+                <a th:href="@{/readers}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+                <a th:href="@{/readers/{id}/edit(id=${reader.id})}" class="btn btn-warning" sec:authorize="hasAnyRole('ADMIN', 'LIBRARIAN')">
+                    <i class="fas fa-edit"></i> Editar
+                </a>
+                <a th:href="@{/loans/new(userId=${reader.id})}" class="btn btn-success" sec:authorize="hasAnyRole('ADMIN', 'LIBRARIAN')">
+                    <i class="fas fa-book"></i> Nuevo Préstamo
+                </a>
+            </div>
+        </div>
+        
+        <!-- Información del lector -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title">Información Personal</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th style="width: 30%">ID:</th>
+                                <td th:text="${reader.id}">1</td>
+                            </tr>
+                            <tr>
+                                <th>Nombre:</th>
+                                <td th:text="${reader.name + ' ' + reader.surname}">Juan Pérez</td>
+                            </tr>
+                            <tr>
+                                <th>Email:</th>
+                                <td th:text="${reader.email}">juan@example.com</td>
+                            </tr>
+                            <tr>
+                                <th>Teléfono:</th>
+                                <td th:text="${reader.phone ?: '-'}">123456789</td>
+                            </tr>
+                            <tr>
+                                <th>Dirección:</th>
+                                <td th:text="${reader.address ?: '-'}">Calle Principal 123</td>
+                            </tr>
+                            <tr>
+                                <th>Ciudad:</th>
+                                <td th:text="${reader.city ?: '-'}">Madrid</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title">Estadísticas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="stat-card">
+                                    <h3>Préstamos Activos</h3>
+                                    <div class="number" th:text="${activeLoansCount}">2</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-card">
+                                    <h3>Total Préstamos</h3>
+                                    <div class="number" th:text="${totalLoansCount}">5</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Préstamos del lector -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Préstamos</h5>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="loansTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" type="button" role="tab" aria-controls="active" aria-selected="true">Activos</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">Historial</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="loansTabContent">
+                    <div class="tab-pane fade show active" id="active" role="tabpanel" aria-labelledby="active-tab">
+                        <div th:if="${#lists.isEmpty(activeLoans)}" class="alert alert-info mt-3">
+                            No hay préstamos activos.
+                        </div>
+                        <div th:if="${not #lists.isEmpty(activeLoans)}" class="table-responsive mt-3">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Libro</th>
+                                        <th>Fecha Préstamo</th>
+                                        <th>Fecha Devolución</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="loan : ${activeLoans}">
+                                        <td th:text="${loan.id}">1</td>
+                                        <td th:text="${loan.book.title}">El Principito</td>
+                                        <td th:text="${#temporals.format(loan.loanDate, 'dd/MM/yyyy')}">01/01/2023</td>
+                                        <td th:text="${#temporals.format(loan.dueDate, 'dd/MM/yyyy')}">15/01/2023</td>
+                                        <td>
+                                            <span th:class="${'badge ' + (loan.status == 'ACTIVE' ? 'badge-primary' : 'badge-danger')}" 
+                                                  th:text="${loan.status}">ACTIVE</span>
+                                        </td>
+                                        <td>
+                                            <a th:href="@{/loans/{id}(id=${loan.id})}" class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a th:if="${loan.status == 'ACTIVE'}" th:href="@{/loans/{id}/return(id=${loan.id})}" class="btn btn-sm btn-success" sec:authorize="hasAnyRole('ADMIN', 'LIBRARIAN')">
+                                                <i class="fas fa-undo"></i> Devolver
+                                            </a>
+                                            <a th:if="${loan.status == 'ACTIVE'}" th:href="@{/loans/{id}/renew(id=${loan.id})}" class="btn btn-sm btn-warning" sec:authorize="hasAnyRole('ADMIN', 'LIBRARIAN')">
+                                                <i class="fas fa-sync"></i> Renovar
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
+                        <div th:if="${#lists.isEmpty(loanHistory)}" class="alert alert-info mt-3">
+                            No hay historial de préstamos.
+                        </div>
+                        <div th:if="${not #lists.isEmpty(loanHistory)}" class="table-responsive mt-3">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Libro</th>
+                                        <th>Fecha Préstamo</th>
+                                        <th>Fecha Devolución</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="loan : ${loanHistory}">
+                                        <td th:text="${loan.id}">1</td>
+                                        <td th:text="${loan.book.title}">El Principito</td>
+                                        <td th:text="${#temporals.format(loan.loanDate, 'dd/MM/yyyy')}">01/01/2023</td>
+                                        <td th:text="${loan.returnDate != null ? #temporals.format(loan.returnDate, 'dd/MM/yyyy') : '-'}">10/01/2023</td>
+                                        <td>
+                                            <span th:class="${'badge ' + (loan.status == 'RETURNED' ? 'badge-success' : 'badge-warning')}" 
+                                                  th:text="${loan.status}">RETURNED</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer th:replace="fragments/footer :: footer"></footer>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/header :: head('Nuevo Préstamo')">
+</head>
+<body>
+    <header th:replace="fragments/header :: navbar"></header>
+    
+    <main class="container protected-page">
+        <h1 class="mt-4 mb-4">Nuevo Préstamo</h1>
+        
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/loans}" th:object="${loan}" method="post">
+                    <div class="form-group">
+                        <label for="book" class="form-label">Libro</label>
+                        <select id="book" th:field="*{book}" class="form-control" required>
+                            <option value="">Selecciona un libro</option>
+                            <option th:each="book : ${books}" th:value="${book.id}" th:text="${book.title + ' - ' + book.author}">El Principito - Antoine de Saint-Exupéry</option>
+                        </select>
+                        <div class="text-danger" th:if="${#fields.hasErrors('book')}" th:errors="*{book}"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="user" class="form-label">Usuario</label>
+                        <select id="user" th:field="*{user}" class="form-control" required>
+                            <option value="">Selecciona un usuario</option>
+                            <option th:each="reader : ${readers}" th:value="${reader.id}" th:text="${reader.name + ' (' + reader.email + ')'}">Juan Pérez (juan@example.com)</option>
+                        </select>
+                        <div class="text-danger" th:if="${#fields.hasErrors('user')}" th:errors="*{user}"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dueDate" class="form-label">Fecha de devolución</label>
+                        <input type="date" id="dueDate" th:field="*{dueDate}" class="form-control" required>
+                        <div class="text-danger" th:if="${#fields.hasErrors('dueDate')}" th:errors="*{dueDate}"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="notes" class="form-label">Notas</label>
+                        <textarea id="notes" th:field="*{notes}" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <a th:href="@{/loans}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    
+    <footer th:replace="fragments/footer :: footer"></footer>
+</body>
+</html>

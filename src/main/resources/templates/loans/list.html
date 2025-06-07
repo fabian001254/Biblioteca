@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="fragments/header :: head('Gestión de Préstamos')">
+</head>
+<body>
+    <header th:replace="fragments/header :: navbar"></header>
+    
+    <main class="container protected-page">
+        <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
+            <h1>Gestión de Préstamos</h1>
+            <a th:href="@{/loans/new}" class="btn btn-primary" sec:authorize="hasAnyRole('ADMIN', 'LIBRARIAN')">
+                <i class="fas fa-plus"></i> Nuevo Préstamo
+            </a>
+        </div>
+        
+        <!-- Filtros de búsqueda -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/loans}" method="get" class="row">
+                    <div class="col-md-4 form-group">
+                        <label for="status" class="form-label">Estado</label>
+                        <select id="status" name="status" class="form-control">
+                            <option value="">Todos</option>
+                            <option value="ACTIVE" th:selected="${param.status == 'ACTIVE'}">Activo</option>
+                            <option value="RETURNED" th:selected="${param.status == 'RETURNED'}">Devuelto</option>
+                            <option value="OVERDUE" th:selected="${param.status == 'OVERDUE'}">Vencido</option>
+                            <option value="LOST" th:selected="${param.status == 'LOST'}">Perdido</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-4 form-group">
+                        <label for="reader" class="form-label">Lector</label>
+                        <input type="text" id="reader" name="reader" class="form-control" th:value="${param.reader}">
+                    </div>
+                    
+                    <div class="col-md-4 form-group">
+                        <label for="book" class="form-label">Libro</label>
+                        <input type="text" id="book" name="book" class="form-control" th:value="${param.book}">
+                    </div>
+                    
+                    <div class="col-12 mt-3">
+                        <button type="submit" class="btn btn-primary">Buscar</button>
+                        <a th:href="@{/loans}" class="btn btn-secondary">Limpiar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Listado de préstamos -->
+        <div class="card">
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(loans)}" class="alert alert-info">
+                    No se encontraron préstamos.
+                </div>
+                
+                <div th:if="${not #lists.isEmpty(loans)}" class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Libro</th>
+                                <th>Usuario</th>
+                                <th>Fecha Préstamo</th>
+                                <th>Fecha Devolución</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="loan : ${loans}">
+                                <td th:text="${loan.id}">1</td>
+                                <td th:text="${loan.book.title}">El Principito</td>
+                                <td th:text="${loan.user.name}">Juan Pérez</td>
+                                <td th:text="${#temporals.format(loan.loanDate, 'dd/MM/yyyy')}">01/01/2023</td>
+                                <td th:text="${loan.dueDate != null ? #temporals.format(loan.dueDate, 'dd/MM/yyyy') : '-'}">15/01/2023</td>
+                                <td>
+                                    <span th:class="${'badge ' + (loan.status == 'ACTIVE' ? 'badge-primary' : (loan.status == 'RETURNED' ? 'badge-success' : (loan.status == 'OVERDUE' ? 'badge-danger' : 'badge-warning')))}" 
+                                          th:text="${loan.status}">ACTIVE</span>
+                                </td>
+                                <td>
+                                    <a th:href="@{/loans/{id}(id=${loan.id})}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a th:if="${loan.status == 'ACTIVE'}" th:href="@{/loans/{id}/return(id=${loan.id})}" class="btn btn-sm btn-success" sec:authorize="hasAnyRole('ADMIN', 'LIBRARIAN')">
+                                        <i class="fas fa-undo"></i> Devolver
+                                    </a>
+                                    <a th:if="${loan.status == 'ACTIVE' || loan.status == 'OVERDUE'}" th:href="@{/loans/{id}/lost(id=${loan.id})}" class="btn btn-sm btn-danger" sec:authorize="hasAnyRole('ADMIN', 'LIBRARIAN')">
+                                        <i class="fas fa-exclamation-triangle"></i> Perdido
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer th:replace="fragments/footer :: footer"></footer>
+</body>
+</html>

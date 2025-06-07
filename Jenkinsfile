@@ -16,7 +16,7 @@ pipeline {
         stage('Verifica Gradle Cache') {
             steps {
                 script {
-                    def gradleZip = 'C:/\.gradle/wrapper/dists/gradle-8.14.2-bin/manual/gradle-8.14.2-bin.zip'
+                    def gradleZip = 'C:\\.gradle\\wrapper\\dists\\gradle-8.14.2-bin\\manual\\gradle-8.14.2-bin.zip'
                     if (fileExists(gradleZip)) {
                         echo "[INFO] Gradle ZIP encontrado en cache local: ${gradleZip}"
                     } else {

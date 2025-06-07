@@ -16,24 +16,24 @@ pipeline {
         }
         stage('Test') {
             steps {
-                sh './gradlew test --no-daemon'
+                bat 'gradlew.bat test --no-daemon'
             }
         }
         stage('Build Docker Images') {
             steps {
-                sh 'docker compose build'
+                bat 'docker compose build'
             }
         }
         stage('Deploy (Docker Compose Up)') {
             steps {
-                sh 'docker compose up -d'
+                bat 'docker compose up -d'
             }
         }
     }
     post {
         always {
             // Mostrar estado de los contenedores
-            sh 'docker compose ps'
+            bat 'docker compose ps'
         }
         failure {
             // Puedes agregar notificaciones aquí (ej: email, Slack)

@@ -7,8 +7,6 @@ services:
     container_name: biblioteca-app
     expose:
       - "8080"
-    volumes:
-      - C:\.gradle:/root/.gradle
     networks:
       - appnet
 

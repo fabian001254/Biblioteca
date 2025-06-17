@@ -47,28 +47,35 @@ jobs:
     - name: Build application
       run: ./gradlew build --no-daemon
     
-    # 7. Configurar Docker Buildx
+    # 7. Instalar Docker Compose
+    - name: Install Docker Compose
+      run: |
+        sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+        docker-compose --version
+    
+    # 8. Configurar Docker Buildx
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     
-    # 8. Construir imágenes Docker
+    # 9. Construir imágenes Docker
     - name: Build Docker images
       run: docker-compose build
     
-    # 9. Levantar servicios para testing
+    # 10. Levantar servicios para testing
     - name: Start services
       run: |
         docker-compose up -d
         echo "Esperando que los servicios inicien..."
         sleep 30
     
-    # 10. Verificar que los servicios estén corriendo
+    # 11. Verificar que los servicios estén corriendo
     - name: Check services status
       run: |
         docker-compose ps
         docker-compose logs
     
-    # 11. Limpiar (siempre se ejecuta)
+    # 12. Limpiar (siempre se ejecuta)
     - name: Cleanup
       if: always()
       run: |

@@ -1,0 +1,39 @@
+language: java
+jdk:
+  - openjdk17
+
+services:
+  - docker
+
+# Variables de entorno (opcional)
+env:
+  - DOCKER_COMPOSE_VERSION=2.20.0
+
+# Comandos antes de ejecutar tests
+before_script:
+  - docker --version
+  - docker-compose --version
+  - echo "Preparando ambiente de testing..."
+
+# Comandos principales de build/test
+script:
+  - echo "Ejecutando tests con Gradle..."
+  - ./gradlew test --no-daemon
+  - echo "Construyendo imágenes Docker..."
+  - docker-compose build
+  - echo "Levantando servicios..."
+  - docker-compose up -d
+  - sleep 30  # Esperar que los servicios inicien
+  - docker-compose ps  # Verificar que estén corriendo
+
+# Comandos después de ejecutar (limpieza)
+after_script:
+  - echo "Deteniendo servicios Docker..."
+  - docker-compose down
+  - docker system prune -f
+
+# Configuración de notificaciones
+notifications:
+  email:
+    on_success: change  # Solo notifica si cambia el estado
+    on_failure: always  # Siempre notifica fallos

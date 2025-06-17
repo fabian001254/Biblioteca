@@ -1,0 +1,96 @@
+name: CI/CD Pipeline
+
+# Cuándo se ejecuta el workflow
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+# Trabajos a ejecutar
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # 1. Checkout del código
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    # 2. Configurar Java 17
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    # 3. Cache de Gradle para acelerar builds
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+    
+    # 4. Dar permisos a gradlew
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
+    
+    # 5. Ejecutar tests
+    - name: Run tests
+      run: ./gradlew test --no-daemon
+    
+    # 6. Construir aplicación
+    - name: Build application
+      run: ./gradlew build --no-daemon
+    
+    # 7. Configurar Docker Buildx
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    # 8. Construir imágenes Docker
+    - name: Build Docker images
+      run: docker-compose build
+    
+    # 9. Levantar servicios para testing
+    - name: Start services
+      run: |
+        docker-compose up -d
+        echo "Esperando que los servicios inicien..."
+        sleep 30
+    
+    # 10. Verificar que los servicios estén corriendo
+    - name: Check services status
+      run: |
+        docker-compose ps
+        docker-compose logs
+    
+    # 11. Limpiar (siempre se ejecuta)
+    - name: Cleanup
+      if: always()
+      run: |
+        docker-compose down
+        docker system prune -f
+
+  # Job adicional para verificar código (opcional)
+  code-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
+    
+    - name: Run code quality checks
+      run: ./gradlew check --no-daemon

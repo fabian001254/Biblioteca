@@ -1,0 +1,142 @@
+version: 2.1
+
+# Orbs (plugins reutilizables)
+orbs:
+  docker: circleci/docker@2.1.1
+
+# Jobs definidos
+jobs:
+  test:
+    # Usar imagen con Java 17 y Docker
+    machine:
+      image: ubuntu-2204:2023.07.1
+    
+    steps:
+      # 1. Checkout del código
+      - checkout
+      
+      # 2. Configurar Java 17
+      - run:
+          name: Install Java 17
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y openjdk-17-jdk
+            java -version
+      
+      # 3. Configurar JAVA_HOME
+      - run:
+          name: Set JAVA_HOME
+          command: |
+            echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' >> $BASH_ENV
+            echo 'export PATH=$JAVA_HOME/bin:$PATH' >> $BASH_ENV
+            source $BASH_ENV
+      
+      # 4. Cache de Gradle
+      - restore_cache:
+          keys:
+            - gradle-deps-v1-{{ checksum "build.gradle" }}
+            - gradle-deps-v1-
+      
+      # 5. Dar permisos a gradlew
+      - run:
+          name: Make gradlew executable
+          command: chmod +x ./gradlew
+      
+      # 6. Ejecutar tests
+      - run:
+          name: Run tests
+          command: ./gradlew test --no-daemon
+      
+      # 7. Construir aplicación
+      - run:
+          name: Build application
+          command: ./gradlew build --no-daemon
+      
+      # 8. Guardar cache
+      - save_cache:
+          key: gradle-deps-v1-{{ checksum "build.gradle" }}
+          paths:
+            - ~/.gradle
+      
+      # 9. Guardar artifacts de test
+      - store_test_results:
+          path: build/test-results/test
+      
+      # 10. Guardar artifacts de build
+      - store_artifacts:
+          path: build/libs
+          destination: jars
+
+  docker-build:
+    # Usar imagen con Docker preinstalado
+    machine:
+      image: ubuntu-2204:2023.07.1
+    
+    steps:
+      # 1. Checkout del código
+      - checkout
+      
+      # 2. Configurar Java 17 (necesario para Gradle)
+      - run:
+          name: Install Java 17
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y openjdk-17-jdk
+      
+      # 3. Configurar JAVA_HOME
+      - run:
+          name: Set JAVA_HOME
+          command: |
+            echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' >> $BASH_ENV
+            source $BASH_ENV
+      
+      # 4. Instalar Docker Compose
+      - run:
+          name: Install Docker Compose
+          command: |
+            sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+            docker-compose --version
+      
+      # 5. Construir imágenes Docker
+      - run:
+          name: Build Docker images
+          command: docker-compose build
+      
+      # 6. Levantar servicios
+      - run:
+          name: Start services
+          command: |
+            docker-compose up -d
+            sleep 30
+      
+      # 7. Verificar servicios
+      - run:
+          name: Check services
+          command: |
+            docker-compose ps
+            docker-compose logs
+      
+      # 8. Limpiar
+      - run:
+          name: Cleanup
+          command: docker-compose down
+          when: always
+
+# Workflows (orchestación de jobs)
+workflows:
+  version: 2
+  test-and-build:
+    jobs:
+      # Ejecutar tests primero
+      - test
+      # Ejecutar Docker build solo si tests pasan
+      - docker-build:
+          requires:
+            - test
+          # Opcional: solo en branch master
+          filters:
+            branches:
+              only:
+                - master
+                - main

@@ -10,10 +10,16 @@ COPY gradle.properties .
 COPY build.gradle .
 COPY settings.gradle .
 
-# Copiar el cache de Docker si existe
-COPY docker-cache/ docker-cache/
+# Dar permisos a gradlew
+RUN chmod +x ./gradlew
 
-# Configurar Gradle cache
+# Crear directorio docker-cache vacío para evitar errores
+RUN mkdir -p docker-cache
+
+# Copiar cache si existe (ahora seguro porque el directorio existe)
+COPY docker-cache* docker-cache/
+
+# Configurar Gradle cache (solo si existe el archivo)
 RUN mkdir -p /root/.gradle/wrapper/dists/gradle-8.14.2-bin/ && \
     if [ -f docker-cache/gradle-8.14.2-bin.zip ]; then \
       echo '[INFO] Gradle ZIP encontrado en docker-cache, copiando...' && \
@@ -21,7 +27,7 @@ RUN mkdir -p /root/.gradle/wrapper/dists/gradle-8.14.2-bin/ && \
       echo '[INFO] Gradle ZIP copiado al cache local del contenedor.' && \
       ls -la /root/.gradle/wrapper/dists/gradle-8.14.2-bin/; \
     else \
-      echo '[ADVERTENCIA] Gradle ZIP NO encontrado en docker-cache. El wrapper intentará descargarlo de internet.'; \
+      echo '[INFO] No hay cache de Gradle disponible. Descargando desde internet...'; \
     fi
 
 # Descargar dependencias (se cachea si no cambian los archivos de gradle)

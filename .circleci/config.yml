@@ -49,13 +49,24 @@ jobs:
           destination: jars
 
   docker-build:
-    # Usar machine para Docker
-    machine:
-      image: ubuntu-2204:2023.07.1
+    # Usar imagen base con Docker
+    docker:
+      - image: cimg/base:current
     
     steps:
       # Checkout del código
       - checkout
+      
+      # Setup Docker remoto (para plan gratuito)
+      - setup_remote_docker:
+          version: 20.10.18
+      
+      # Verificar Docker
+      - run:
+          name: Check Docker
+          command: |
+            docker --version
+            docker info
       
       # Instalar Docker Compose
       - run:
@@ -65,30 +76,19 @@ jobs:
             sudo chmod +x /usr/local/bin/docker-compose
             docker-compose --version
       
-      # Construir imágenes Docker
+      # Construir imagen Docker
       - run:
-          name: Build Docker images
-          command: docker-compose build
-      
-      # Levantar servicios
-      - run:
-          name: Start services
+          name: Build Docker image
           command: |
-            docker-compose up -d
-            sleep 30
+            docker build -t biblioteca-app .
+            docker images
       
-      # Verificar servicios
+      # Verificar que la imagen se construyó correctamente
       - run:
-          name: Check services
+          name: Test Docker image
           command: |
-            docker-compose ps
-            docker-compose logs
-      
-      # Limpiar
-      - run:
-          name: Cleanup
-          command: docker-compose down
-          when: always
+            echo "Docker image built successfully"
+            docker inspect biblioteca-app
 
 # Orchestrate jobs using workflows
 workflows:

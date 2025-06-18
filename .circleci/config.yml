@@ -57,9 +57,8 @@ jobs:
       # Checkout del código
       - checkout
       
-      # Setup Docker remoto (para plan gratuito)
-      - setup_remote_docker:
-          version: 20.10.18
+      # Setup Docker remoto (sin versión específica)
+      - setup_remote_docker
       
       # Verificar Docker
       - run:
